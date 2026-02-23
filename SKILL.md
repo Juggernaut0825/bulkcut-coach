@@ -7,42 +7,67 @@ license: MIT
 
 # BulkCut Coach - Fitness & Diet Tracker
 
-A CLI fitness tool that uses Gemini 3 Flash (via OpenRouter) for food photo analysis and personalized planning.
+Uses Gemini 3 Flash (via OpenRouter) for food photo analysis and personalized planning.
 
-## Capabilities
+## How to Use
 
-1. **Food Photo Analysis** - Analyze food images to estimate calories and macros (protein/carbs/fat)
-2. **Training Log** - Log exercises with sets/reps/weight, estimate calories burned
-3. **Body Metrics** - Calculate BMR/TDEE from height/weight/age/body fat
-4. **Daily Summary** - Show calorie balance (intake vs expenditure vs target)
-5. **Plan Generation** - Create personalized training and diet plans based on goals
+All commands run from the project root. Parse the user's natural language and call the appropriate command via Bash.
 
-## Setup
-
-Requires:
-- Python 3.10+
-- `pip install -r requirements.txt`
-- `.env` file with `OPENROUTER_API_KEY=<your-key>`
-
-## Usage
-
+### Food Photo Analysis
+When user shares a food image path:
 ```bash
-python scripts/app.py <command> [args]
+python scripts/app.py photo <image_path>
 ```
 
-### Commands
-- `photo <image_path>` - Analyze a food photo
-- `meal <description>` - Log a meal by text description
-- `train` - Log a training session interactively
-- `metrics` - Set/update body metrics
-- `summary` - Show today's calorie summary
-- `plan` - Generate a training/diet plan
-- `goal <cut|bulk|maintain>` - Set your training goal
-- `history` - View recent logs
+### Text Meal Logging
+When user describes what they ate:
+```bash
+python scripts/app.py meal "<description>"
+```
 
-## Technical Details
+### Workout Logging
+When user describes their training (exercises, sets, reps, weight), do NOT use the interactive `train` command. Instead call Python directly:
+```bash
+python -c "
+import sys; sys.path.insert(0, 'scripts')
+from training import log_training
+r = log_training([
+    {'name': '<exercise>', 'sets': <n>, 'reps': <n>, 'weight_kg': <n>},
+])
+print(f'Calories burned: {r[\"calories_burned\"]} kcal')
+"
+```
+Parse the user's natural language into the exercise list. Examples:
+- "4x4 squat at 112.5kg" → `{'name': 'Back Squat', 'sets': 4, 'reps': 4, 'weight_kg': 112.5}`
+- "3x2 power clean 67.5kg" → `{'name': 'Power Clean', 'sets': 3, 'reps': 2, 'weight_kg': 67.5}`
 
-- LLM: `google/gemini-3-flash-preview` via OpenRouter
-- API key from `.env` as `OPENROUTER_API_KEY`
-- Data stored in `data/` directory as JSON files
-- Food analysis uses multimodal (image + text) prompts
+### Body Metrics
+When user provides height/weight/age/gender/body fat:
+```bash
+python -c "
+import sys; sys.path.insert(0, 'scripts')
+from metabolism import set_metrics
+p = set_metrics(<height_cm>, <weight_kg>, <age>, '<gender>', <body_fat_pct_or_None>)
+print(f'BMR: {p[\"bmr\"]} kcal/day\nTDEE: {p[\"tdee\"]} kcal/day')
+"
+```
+
+### Goal Setting
+```bash
+python scripts/app.py goal <cut|bulk|maintain>
+```
+
+### Daily Summary
+```bash
+python scripts/app.py summary
+```
+
+### Generate Plan
+```bash
+python scripts/app.py plan
+```
+
+### History
+```bash
+python scripts/app.py history
+```

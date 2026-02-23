@@ -6,7 +6,7 @@ PROMPT_TEMPLATE = """Estimate total calories burned for this workout session:
 {workout}
 
 Consider exercise type, sets, reps, weight, and typical energy expenditure.
-Return ONLY valid JSON: {{"exercises": ["{name}", ...], "total_calories_burned": number}}"""
+Return ONLY valid JSON: {{"exercises": ["name", ...], "total_calories_burned": number}}"""
 
 
 def log_training(exercises):
